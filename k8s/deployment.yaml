@@ -1,0 +1,59 @@
+# OpenConnect VPN client — Kubernetes deployment.
+# Default replicas: 0 (off). Managed via:
+#   k0 proxy openconnect connect <portal>   # scale to 1, exec openconnect inside
+#   k0 proxy openconnect disconnect         # scale to 0
+#   k0 proxy openconnect exec -- curl https://ipinfo.io
+#
+# Requires NET_ADMIN + /dev/net/tun for VPN tunnel creation.
+# SOCKS5 proxy (microsocks) on :1080 routes through VPN once connected.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openconnect
+  namespace: networking
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: openconnect
+  template:
+    metadata:
+      labels:
+        app: openconnect
+    spec:
+      containers:
+        - name: openconnect
+          image: ghcr.io/kub0-ai/openconnect-proxy:latest
+          ports:
+            - containerPort: 1080
+              name: socks5
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [NET_ADMIN]
+          volumeMounts:
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+      volumes:
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openconnect
+  namespace: networking
+spec:
+  selector:
+    app: openconnect
+  ports:
+    - port: 1080
+      targetPort: 1080
+      name: socks5

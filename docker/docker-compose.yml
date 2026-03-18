@@ -1,0 +1,24 @@
+# OpenConnect VPN client with SOCKS5 proxy.
+# Supports GlobalProtect (gp), AnyConnect (anyconnect), Fortinet, F5, Pulse, and more.
+#
+# Usage:
+#   cp .env.example .env && edit .env
+#   docker compose up -d
+#   docker exec -it openconnect openconnect --protocol=$OC_PROTOCOL --user=$OC_USER --passwd-on-stdin $OC_PORTAL
+#   # SOCKS5 now available at <host>:1080
+
+services:
+  openconnect:
+    image: ghcr.io/kub0-ai/openconnect-proxy:latest
+    container_name: openconnect
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "1080:1080"
+    environment:
+      - OC_PORTAL=${OC_PORTAL:-}
+      - OC_USER=${OC_USER:-}
+      - OC_PROTOCOL=${OC_PROTOCOL:-gp}
+    restart: no
