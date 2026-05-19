@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        gcc make git ca-certificates \
+        gcc libc-dev make git ca-certificates \
     && git clone --depth=1 https://github.com/rofl0r/microsocks /src \
     && cd /src && make
 
